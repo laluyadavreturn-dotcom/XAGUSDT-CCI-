@@ -279,12 +279,18 @@ def check_entry(curr_c, bullish_cross, bearish_cross):
 # ---------------- MAIN (one run) ----------------
 def main():
     now_utc = datetime.now(timezone.utc)
+
+    # Always ensure state.json and the trade log CSV exist on disk, even on
+    # a weekend skip - otherwise the workflow's `git add` step fails with
+    # "pathspec did not match any files" because nothing was ever written.
+    init_trade_log()
+    state = load_state()
+    save_state(state)
+
     if now_utc.weekday() >= 5:  # 5=Saturday, 6=Sunday
         print(f"Weekend ({now_utc.strftime('%A')}) - bot inactive Mon-Fri only, skipping run.")
         return
 
-    init_trade_log()
-    state = load_state()
     is_first_run = state["last_processed_time"] == 0
 
     print(f"Loaded state: capital={state['capital']:.2f}, "
